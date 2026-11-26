@@ -4,7 +4,8 @@
 The picture is a broadsheet front page: a deep-teal masthead, one lead
 story with a small tariff comparison chart, then five numbered stories in
 a two-column grid, and a dateline footer. It writes the finished poster to
-/output/entry.png and also leaves a copy next to this file.
+/output/entry.png and leaves a copy next to this file when that directory
+is writable.
 """
 
 import os
@@ -210,8 +211,16 @@ def main():
     poster = build_poster()
     out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR", "/output")
     save_copy(poster, os.path.join(out_dir, "entry.png"))
-    save_copy(poster, os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                   "entry.png"))
+    local_dir = os.path.dirname(os.path.abspath(__file__))
+    local_copy = os.path.join(local_dir, "entry.png")
+    try:
+        if os.access(local_dir, os.W_OK):
+            save_copy(poster, local_copy)
+        else:
+            print("skipping local copy: directory not writable: %s"
+                  % local_dir)
+    except OSError as exc:
+        print("skipping local copy: %s" % exc)
     print("wrote entry.png (1024x1024)")
 
 
